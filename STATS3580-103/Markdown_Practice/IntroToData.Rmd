@@ -1,0 +1,43 @@
+---
+title: "Introduction To Data"
+author: "Cameron Smith"
+date: "08/27/2018"
+output: html_document
+---
+
+```{r label = "setup", include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA, message=FALSE, warning=FALSE, fig.align="center")
+```
+
+### Chapter One
+
+What is  **Data**?
+
+>Data is any collection of numbers, characters, images, or other items that provide information about something.
+
+For **Data** to be useful
+
+### High School and Beyond
+
+* Use `head()` and `tail()`
+* Use `str()`
+
+* To make a new R code chunk:
+    * **PC**: press Ctrl + Alt + I
+    * **Mac**: press Ctrl + Shift + I
+
+
+```{r}
+library(openintro)
+library(dplyr)
+
+hsb <- hsb2 %>%
+  mutate(read_cat = ifelse(read < avg_read, "below average", "at or below average")) %>%
+  select(id, read, read_cat)
+DT::datatable(hsb)
+```
+
+
+```{r}
+
+```
