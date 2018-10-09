@@ -1,0 +1,41 @@
+---
+title: "10/9/2018 - In Class Notes"
+author: "Cameron Smith"
+date: "10/9/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Heads or Tails
+
+Let x = number of heads in n = 10 flips of a fair coin.
+
+x could be 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.
+
+P(x = 0) = $(1/2)^10$ = T, T, T, T, T, T, T, T, T, T
+
+P(x = 1) = $(1/2)^9(1/2)10$ = H, T, T, T, T, T, T, T, T, T
+
+P(x = 2) = $(1/2)^8(1/2)^245$ = H, H, T, T, T, T, T, T, T, T
+
+###Use `choose()`.
+
+```{r}
+choose(10,0:10)
+```
+
+```{r}
+plot(x = 0:10, y = dbinom(0:10, 10, 1/2), type = "h", xlab = "x", ylab = expression(P(X == x)))
+
+x <- 0:10
+px <- dbinom(x, 10, 1/2)
+EX <- sum(x*px)
+EX
+
+VX <- sum((x - EX)^2 * px)
+VX
+
+```

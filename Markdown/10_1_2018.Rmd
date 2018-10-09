@@ -1,0 +1,28 @@
+---
+title: "10/1/2018"
+author: "Cameron Smith"
+date: "10/1/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Regression
+
+y - response, dependent
+
+x_vector - independent, explanatory, features, inputs, predictors
+
+y = f(x_vector)
+
+y = f_hat(x_vector) + echelon (noise)
+
+y_hat = b0 (y-intercept) + b1 (slope) * xi
+
+ei = yi - y_hati
+
+sum(ei^2)
+
+lm(response ~ predictors, data = DF)

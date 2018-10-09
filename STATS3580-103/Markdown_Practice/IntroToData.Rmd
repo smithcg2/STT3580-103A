@@ -15,8 +15,6 @@ What is  **Data**?
 
 >Data is any collection of numbers, characters, images, or other items that provide information about something.
 
-For **Data** to be useful
-
 ### High School and Beyond
 
 * Use `head()` and `tail()`

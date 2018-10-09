@@ -15,4 +15,169 @@ DF %>%
   group_by(Gender) %>% 
   summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n(), SD = sd(Expenditures))
 
+ggplot(data = DF, aes(x = Gender, y = Expenditures, fill = Gender)) + 
+  geom_boxplot() + 
+  theme_bw() + 
+  scale_fill_manual(values = c("pink", "blue"))
 
+DF %>% 
+  group_by(Gender) %>% 
+  summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n()) %>%
+  ggplot(aes(x = Gender, y= ME, fill = Gender)) + 
+  geom_bar(stat = "identity") + 
+  labs(title = "Average Expenditure by Gender", y = "Mean Expenditure") + 
+  theme_bw() + 
+  scale_fill_manual(values = c("pink", "blue"))
+
+DF %>% 
+  group_by(Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n())
+
+DF %>% 
+  group_by(Age_Cohort) %>% 
+  summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n())
+
+DF %>% 
+  group_by(Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n()) %>%  
+  ggplot(aes(x = reorder(Ethnicity, ME), y = ME)) +
+  geom_bar(stat="identity", fill = "red") + 
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) + 
+  labs(x = "", y = "Mean Expenditure", title = "Average Expenditure by Ethnicity")
+
+ggplot(data = DF, aes(x = reorder(Ethnicity, Expenditures, median), y = Expenditures)) + 
+  geom_boxplot() +
+  theme_bw() + 
+  theme(axis.text.x = element_text(angle = 50, hjust = 1)) +
+  labs(x = "")
+
+DF %>% 
+  group_by(Age_Cohort) %>% 
+  summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n())
+
+ggplot(data = DF, aes(x = reorder(Age_Cohort, Expenditures, median), y = Expenditures)) + geom_boxplot() + theme_bw()
+
+ggplot(data = DF, aes(x = reorder(Age_Cohort, Expenditures, median), y = Expenditures)) + geom_boxplot() + theme_bw() + 
+  facet_grid(.~Gender)
+
+ggplot(data = DF, aes(x = reorder(Age_Cohort, Expenditures, median), y = Expenditures)) + geom_boxplot(varwidth = TRUE) + theme_bw() + 
+  facet_grid(Ethnicity ~ Gender)
+
+DF %>% 
+  group_by(Gender, Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n())
+
+DF %>% 
+  group_by(Ethnicity, Age_Cohort) %>% 
+  summarize(ME = mean(Expenditures), MDE = median(Expenditures), n= n())
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>% 
+  group_by(Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), n = n())
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>% 
+  group_by(Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), n = n()) %>% 
+  ggplot(aes(x = Ethnicity, y = ME, fill = Ethnicity)) + 
+  geom_bar(stat = "identity") +
+  theme_bw() + 
+  scale_fill_manual(values = c("chocolate", "peachpuff")) + 
+  labs(y = "Mean Expenditure")
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>%
+  ggplot(aes(x = Ethnicity, y = Expenditures, fill = Ethnicity)) + 
+  geom_boxplot() + 
+  theme_bw() + 
+  scale_fill_manual(values = c("chocolate", "peachpuff"))
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>% 
+  group_by(Age_Cohort, Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), n = n())
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>% 
+  group_by(Age_Cohort, Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), n = n()) %>%
+  ggplot(aes(x = reorder(Age_Cohort, ME), y = ME, fill = Ethnicity)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  theme_bw() + 
+  labs(x = "Age Cohort", y = "Average Expenditure", 
+       title = "Average Expenditures by Age Cohort and Ethnicity") + 
+  scale_fill_manual(values = c("chocolate", "peachpuff"))
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>%
+  ggplot(aes(x = reorder(Age_Cohort, Expenditures, median), y = Expenditures, fill = Ethnicity)) + 
+  geom_boxplot(position = position_dodge(0.9)) + 
+  theme_bw() + 
+  scale_fill_manual(values = c("chocolate", "peachpuff"))
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>% 
+  group_by(Age_Cohort, Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), n = n())
+
+DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>% 
+  group_by(Age_Cohort, Ethnicity) %>% 
+  summarize(ME = mean(Expenditures), n = n()) %>%
+  ggplot(aes(x = reorder(Age_Cohort, ME), y = n, fill = Ethnicity)) + 
+  geom_bar(stat = "identity", position = "dodge") + 
+  theme_bw() + 
+  scale_fill_manual(values = c("chocolate", "peachpuff")) + 
+  labs(x = "Age Cohort", y = "Number in Group", title = "Consumers by Ethnicity and Age Cohort")
+
+ggplot(data = subset(DF,Ethnicity == "White not Hispanic" | Ethnicity == "Hispanic" ), aes(x = Age, y = Expenditures, color = Ethnicity)) + 
+  geom_point(alpha = 0.8) +
+  geom_smooth(se = FALSE) + 
+  theme_bw() + 
+  scale_color_manual(values = c("chocolate", "peachpuff"))
+
+##Tests?
+
+NDF <- DF %>%
+  filter(Ethnicity %in% c("Hispanic", "White not Hispanic")) %>% 
+  select(Ethnicity, Expenditures)
+NDF %>% 
+  group_by(Ethnicity) %>% 
+  summarize(AVG = mean(Expenditures))
+
+DT::datatable(NDF)
+
+White <- NDF$Expenditures[NDF$Ethnicity=="White not Hispanic"]
+mean(White)
+
+Hispanic <- NDF$Expenditures[NDF$Ethnicity=="Hispanic"]
+mean(Hispanic)
+
+nW <- length(White)
+nH <- length(Hispanic)
+BV <- c(White, Hispanic)
+obs_diff <- mean(White) - mean(Hispanic)
+obs_diff
+
+sims <- 10^4 - 1
+ans <- numeric(sims)
+for(i in 1:sims){
+  index <- sample(nW + nH, nW)
+  ans[i] <- mean(BV[index]) - mean(BV[-index])
+}
+hist(ans, xlim = c(-obs_diff-10, obs_diff+10))
+abline(v = obs_diff)
+
+ggplot(data = data.frame(x = ans), aes(x = x)) + 
+  geom_histogram(binwidth = 500, fill = "pink", color = "black") + 
+  theme_bw() + 
+  geom_vline(xintercept = obs_diff)
+
+pvalue <- (sum(ans >= obs_diff) + 1)/(sims + 1)
+pvalue
+
+model <- lm(Expenditures ~ Age_Cohort * Ethnicity, 
+            data = subset(DF, Ethnicity == "White not Hispanic" | Ethnicity == "Hispanic"))
+summary(model)
