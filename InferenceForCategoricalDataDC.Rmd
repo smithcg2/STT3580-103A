@@ -1,0 +1,42 @@
+---
+title: "Inference for Categorical Data DC"
+author: "Cameron Smith"
+date: "11/14/2018"
+output: bookdown::html_document2
+---
+
+```{r setup, include=FALSE, echo = FALSE, results = 'hide', message = FALSE, warning = FALSE, fig.align='center'}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(infer)
+library(openintro)
+library(ggplot2)
+library(resampledata)
+library(xtable)
+
+gss <- resampledata::GSS2006
+```
+#Inference For Categorical Data
+
+##Inference for a single parameter
+
+###Exploring consci
+>The General Social Survey asks about far more topics than just happiness. Take a moment to poke around this data set and visualize the variables that interest you. When you're ready, turn your attention to the question of how much confidence people had in the scientific community in 2016. The answers to this question have been summarized as `"High"` or `"Low"` levels of confidence and are stored in the consci variable.
+
+```{r}
+# Load tidyverse
+library(tidyverse)
+
+# Subset data from 2016
+gss2016 <- gss %>%
+  filter(year == 2016)
+# Plot distribution of consci
+ggplot(gss2016, aes(x = consci)) +
+  geom_bar()
+# Compute proportion of high conf
+p_hat <- gss2016 %>%
+  summarize(p = mean(consci == "High", na.rm = TRUE)) %>%
+  pull()
+```
+

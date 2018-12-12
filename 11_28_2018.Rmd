@@ -1,0 +1,17 @@
+---
+title: "11_28_2018"
+author: "Cameron Smith"
+date: "11/28/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r notes, echo=FALSE}
+tab <- c("numeric - numeric = (regression)", "numeric - factor(2-levels) = (t-test, equal of means)", "numeric - factor(more than 2 levels) = (equality of many means)", "factor - factor = (chisq)", "factor (2-level) - numberic = (regression)")
+tab
+```
+$\$
+
+

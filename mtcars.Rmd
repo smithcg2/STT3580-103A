@@ -1,0 +1,77 @@
+---
+title: "mtcars"
+author: "Cameron Smith"
+date: "10/30/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(infer)
+```
+
+#Look at data
+What is the mean and sd of mpg for manual and automatic cars?
+
+We want to test $H_0:\mu_{\text{Manual}}-\mu_{\text{Automatic}} = 0$ versus $H_A:\mu_{\text{Manual}}-\mu_{\text{Automatic}} > 0$
+
+```{r}
+mtcars <- mtcars %>%
+  mutate(am = factor(am, levels = c(1,0), labels = c("Manual", "Automatic")))
+mtcars %>%
+  group_by(am) %>%
+  summarize(meanMPG = mean(mpg), sdMPG = sd(mpg), n = n())
+
+mtcars %>%
+  ggplot(aes(sample = mpg)) +
+  geom_qq() +
+    facet_wrap(~am)
+```
+
+#Use t.test to test hypothesis
+
+#use infer pipeline
+```{r}
+TS <- mtcars %>%
+  specify(mpg ~ am) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 10000, type = "permute") %>%
+  calculate(stat = "t", order = c("Manual", "Automatic"))
+
+visualize(TS, method = "both")
+
+t <- t.test(mpg ~ am, data = mtcars)
+obs_stat <- t$stat
+get_pvalue(TS, obs_stat, direction = "greater")
+```
+
+#use for loop
+```{r}
+sims <- 10000
+results <- numeric(sims)
+for(i in 1:sims) {
+  results[i] <- t.test(mpg ~ sample(am), data = mtcars)$stat
+}
+pvalue <- (sum(results >= obs_stat) + 1)/(sims + 1)
+pvalue
+```
+
+```{r}
+mean(mtcars$qsec)
+```
+
+```{r}
+
+```
+
+$Z_\text{score} = \frac{stat - \mu_\text{STAT}}{\theta_\text{STAT}}$
+$T_\text{score} = \frac{stat - \mu_\text{STAT}}{\hat\theta_\text{STAT}}$
+
+```{r}
+
+t.test(mtcars$qsec, mu = 17)
+
+```
+
+

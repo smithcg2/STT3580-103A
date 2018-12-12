@@ -1,0 +1,70 @@
+---
+title: "In Class Notes"
+author: "Cameron Smith"
+date: 'Last updated: `r format(Sys.time(), "%b %d, %Y - %I:%M %p")`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#10/9/2018
+
+## Heads or Tails
+
+Let x = number of heads in n = 10 flips of a fair coin.
+
+x could be 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10.
+
+P(x = 0) = $(1/2)^10$ = T, T, T, T, T, T, T, T, T, T
+
+P(x = 1) = $(1/2)^9(1/2)10$ = H, T, T, T, T, T, T, T, T, T
+
+P(x = 2) = $(1/2)^8(1/2)^245$ = H, H, T, T, T, T, T, T, T, T
+
+###Use `choose()`.
+
+```{r}
+choose(10,0:10)
+```
+
+```{r}
+plot(x = 0:10, y = dbinom(0:10, 10, 1/2), type = "h", xlab = "x", ylab = expression(P(X == x)))
+
+x <- 0:10
+px <- dbinom(x, 10, 1/2)
+EX <- sum(x*px)
+EX
+
+VX <- sum((x - EX)^2 * px)
+VX
+
+```
+
+#10/10/2018
+
+$Z = \frac{stat - M_{stat}}{\theta_{stat}}$
+
+$t = \frac{stat - M_{stat}}{\widehat\theta_{stat}}$
+
+If $X\sim(M,\theta)$ provided n is sufficently large
+
+$\bar{X} \sim N(\mu_{\bar{x}}=\mu, \theta_{\bar{x}} = \frac{\theta}{\sqrt{n}})$
+
+```{r}
+sims <- 10000
+xbar <- numeric(sims)
+for (i in 1:sims) {
+  x <- runif(10, 0, 10)
+  xbar[i] <- mean(x)
+}
+
+plot(xbar)
+mean(xbar)
+var(xbar)
+sqrt(100/12)/4
+```
+
+$\mathbb{P}(Z_{\frac{\sigma}{Z}}\le Z \le Z_{1-\frac{\sigma}{Z}}) = 1 - \sigma$
+
+$\mathbb{P}(Z_{\frac{\sigma}{Z}}\le \frac{\bar{x} - \mu}{\theta/\sqrt{n} } \le Z_{1-\frac{\sigma}{Z}}) = 1 - \sigma$

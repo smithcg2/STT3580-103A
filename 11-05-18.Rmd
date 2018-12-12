@@ -1,0 +1,283 @@
+---
+title: "Class Notes"
+author: "Cameron Smith"
+date: "11/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo = FALSE, results = 'hide', message = FALSE, warning = FALSE, fig.align='center'}
+library(PASWR2)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(infer)
+library(MASS)
+```
+
+```{r}
+sims <- 10000
+n <- 100
+p <- .8
+phat <- rbinom(sims, n, p)/n
+mean(phat)
+sd(phat)
+Zscore <- (phat - mean(phat))/sd(phat)
+
+Zscore1 <- (phat - mean(phat))/sqrt((mean(phat)*((1-mean(phat))/n)))
+
+```
+
+$H_0: p = .78$
+$H_A: p \neq .78$
+
+```{r}
+sims <- 40
+n <- 50
+p <- .78
+phat <- rbinom(sims, n, p)/n
+mean(phat)
+sd(phat)
+Zscore <- (phat - mean(phat))/sd(phat)
+Zscore
+
+```
+
+```{r}
+xobs <- (.8-.78)/(sqrt(.8*.2/50))
+xobs
+pnorm(xobs)
+1-pnorm(xobs)
+pval <- (1-pnorm(xobs))*2
+pval
+```
+
+$L = \frac{\hat{p} + z_{1-\alpha/2}^2/(2n) - z_{1-\alpha/2}\sqrt{\hat{p}(1 - \hat{p})/n + z_{1- \alpha/2}^2/(4n^2)}}{1 - z_{1 - \alpha/2}^2/n},$
+
+$U = \frac{\hat{p} + z_{1-\alpha/2}^2/(2n) + z_{1-\alpha/2}\sqrt{\hat{p}(1 - \hat{p})/n + z_{1- \alpha/2}^2/(4n^2)}}{1 - z_{1 - \alpha/2}^2/n}.$
+
+```{r}
+prop.test(x = 499, n = 846, conf.level = .9, correct = FALSE)
+```
+
+#Fundamental Question of Inference
+>How does what we actually observe compare to the null hypothesis if we repeat the process many times?
+
+$Given \begin{cases}{\hat{P_1}\sim N(\mu_{\hat P_1},\theta_{\hat P_1})}\\{\hat{P_2}\sim N(\mu_{\hat P_2},\theta_{\hat P_2})} \end{cases}$
+What is the distribution of $\hat P_1 - \hat P_2$?
+
+$Z = \frac{stat - \mu_{stat}}{\theta_{stat}}$
+
+$\mu_{\hat P_1} = P_1, \theta_{\hat P_1} = \sqrt{\frac{P_1(1-P_1)}{n}}$
+
+$(\hat P_1 - \hat P_2) \sim N(P_1 - P_2, \sqrt{\frac{P_1(1-P_1)}{n_1}+\frac{P_2(1-P_2)}{n_2}})$
+
+$E[\hat P_1 - \hat P_2] = P_1 - P_2$
+
+$E[\hat P_1] - E[\hat P_2]$
+
+$Z = \frac{(\hat P_1 - \hat P_2)-(P_1 - P_2)}{\sqrt{\frac{P_1(1-P_1)}{n_1}+\frac{P_2(1-P_2)}{n_2}}} \sim N(0,1)$
+
+$H_0: P_1 - P_2 = 0 => P_1 = P_2 => Z = \frac{(\hat P_1 - \hat P_2)-(P_1 - P_2)}{\sqrt{\frac{P_1(1-P_1)}{n_1}+\frac{P_2(1-P_2)}{n_2}}}$
+
+$\hat P_p = \frac{x_1 + x_2}{n_1 + n_2}$
+
+$CI_{1-\alpha} => \text{pt.est} +/- \text{ME}$
+
+$CI_{1-\alpha}(P_1-P_2) = [(\hat P_1 - \hat P_2) +/- Z_{1-\frac{\alpha}{z}}]$
+
+---
+```{r}
+
+?TITANIC3
+
+TITANIC3 %>%
+  mutate(survived = factor(survived, levels = c(1,0), labels = c("True", "False"))) %>%
+  ggplot(aes(x=survived, fill = pclass)) +
+    geom_bar(position = "fill") + 
+    theme_bw()
+
+```
+
+$X^2 = \frac{\sum(0-E)^2}{E}$
+
+```{r}
+data <- TITANIC3 %>%
+  mutate(survived = factor(survived, levels = c(1,0), labels = c("True", "False")))
+
+T1 <- table(data$pclass, data$survived)
+
+
+
+##TITANIC3 %>%
+##  mutate(survived = factor(survived, levels = c(1,0), labels = c("True", "False"))) %>%
+##  select(pclass, survived) %>%
+##  table()
+T1
+vals <- addmargins(T1)
+
+expected <- matrix(nrow=nrow(vals)-1, ncol = ncol(vals)-1)
+
+for(i in 1:(nrow(vals)-1)) {
+  for (j in 1:(ncol(vals)-1)) {
+    expected[[i,j]] <- vals[[i, ncol(vals)]] * vals[[nrow(vals),j]]/vals[[nrow(vals), ncol(vals)]]
+    colnames(expected) <- colnames(vals)[1:ncol(expected)]
+    rownames(expected) <- rownames(vals)[1:nrow(expected)]
+
+  }
+}
+expected
+
+chi_obs_stat <- chisq.test(T1)$stat
+chi_obs_stat
+
+sims <- 10000
+results <- numeric(sims)
+for(i in 1:sims) {
+  T2 <- xtabs(~pclass + sample(survived), data = data)
+  results[i] <- chisq.test(T2,correct = FALSE)$stat
+}
+
+hist(results)
+
+```
+
+Find the p-value
+
+```{r}
+pvalueSIM <- (sum(results >= chi_obs_stat) + 1)/(sims + 1)
+pvalueSIM
+```
+
+Use `infer`
+
+```{r}
+T3 <- data %>%
+  specify(pclass ~ survived) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "Chisq")
+
+visualize(T3, method = "both")
+
+ggplot(T3, aes(x=stat)) +
+  geom_density(fill = "skyblue")
+
+#t <- t.test(pclass ~ survived, data = data)
+#obs_stat <- t$stat
+get_pvalue(T3, chi_obs_stat, direction = "greater")
+```
+
+#What is a p-value
+>The probability that what we observe is greater than or equal to the observation we made if we assume the null hypothesis is true.
+
+#Consider Testing 
+$H_0: p_1 - p_2 = 0$
+
+```{r}
+data %>%
+  dplyr::select(sex, survived) %>%
+  table() %>%
+  addmargins()
+
+data %>%
+  dplyr::select(sex, survived) %>%
+  table() %>%
+  prop.table(1)
+
+prop.test(x = c(161, 339), n = c(843, 466), alternative = "less", correct = FALSE)
+```
+
+Use `infer`
+
+```{r}
+T4 <- data %>%
+  specify(survived ~ sex, success = "True") %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "Chisq", order = c("male","female"))
+
+visualize(T4, method = "both")
+
+ggplot(T4, aes(x=stat)) +
+  geom_density(fill = "pink")
+
+#t <- t.test(pclass ~ survived, data = data)
+#obs_stat <- t$stat
+get_pvalue(T4, chi_obs_stat, direction = "greater")
+```
+
+
+```{r}
+phatmale <- 161/843
+phatfemale <- 339/466
+phatp <- (161 + 339)/(843+466)
+zobs <- (phatmale - phatfemale) / sqrt(phatp*(1-phatp)/843+phatp*(1-phatp)/466)
+zobs
+
+sims <- 1000
+results2 <- numeric(sims)
+for(i in 1:sims) {
+  T6 <- xtabs(~sex + sample(survived), data = data)
+  results2[i] <- chisq.test(T6,correct = FALSE)$stat
+}
+
+pvalue <- (sum(results2 >= chisq.test(table(data$sex, data$survived))$stat))
+
+hist(results)
+
+```
+
+```{r}
+DP <- c(67, 76, 57, 48, 73, 79)
+MDP <- matrix(data = DP, nrow = 2, byrow = TRUE)
+dimnames(MDP) <- list(Pop = c("Drug", "Placebo"), Status = c("Improve", "No Change", "Worse"))
+TDP <- as.table(MDP)
+TDP
+
+NT <- TDP %>%
+  broom::tidy() %>%
+  uncount(n)
+
+NT
+```
+
+---
+
+Probability of class demographic
+$X^2_{obs} = \sum{\frac{(OBS - EXP)^2}{EXP}}$
+Class   percent     OBS     EXP
+fresh   0           1       0
+sophm   .2          4       3.6
+junio   .4          8       7.2
+senio   .4          5       7.2
+
+total   1.0         18      18
+
+move freshman to sophmore to avoid errors
+
+```{r}
+percent <- c(.2, .4, .4)
+obs <- c(5, 8, 5)
+expected <- percent * sum(obs)
+X2 <- sum((obs-expected)^2/expected)
+X2
+pchisq(X2, 2, lower = FALSE)
+chisq.test(obs, percent)
+
+qchisq(.05, 3)
+qchisq(.95, 3)
+
+OBS <- sample(1:10000, 100, replace = FALSE)
+
+p1 <- pexp(0.25, 1)
+p2 <- pexp(0.75, 1) - p1
+p3 <- pexp(1.25, 1) - pexp(0.75, 1)
+p4 <- pexp(1.25, 1, lower = FALSE)
+ps <- c(p1, p2, p3, p4)
+ps
+
+EXP <- ps * 100
+EXP
+
+
+```

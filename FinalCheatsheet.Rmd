@@ -1,0 +1,419 @@
+---
+title: "Final Info Sheet to Excel"
+author: "Cameron Smith"
+date: "12/12/2018"
+output: html_document
+---
+```{r echo=FALSE, message=FALSE, prompt=FALSE}
+library(infer)
+library(resampledata)
+library(tidyverse)
+library(MASS)
+library(dplyr)
+#fullterm data is TXBirths where the age is 25-29 gestation is greater than 38 but less or equal to than 42 and no multiples.
+fullterm <- TXBirths2004 %>% 
+  filter(MothersAge == "25-29", Gestation >= 38, 
+         Gestation <= 42, Multiple == "No")
+
+## ------------------------------------------------------------------------
+```
+
+#Last Exam Q&A
+
+```{r lastexam}
+#1A: Probability that t with 5 degrees of freedom is greater than or equal to -0.5
+ans1A <- 1 - pt(-0.5,5)
+#OR
+ans1A1 <- pt(-0.5, 5, lower = FALSE)
+
+#1B: Probability that z <= 2
+ans1B <- pnorm(2)
+
+#1C: Chisq with 3 degrees of freedom >= 4
+ans1C <- 1 - pchisq(4, 3)
+#OR
+ans1C1 <- pchisq(4, 3, lower = FALSE)
+
+#1D: Probability that a t distribution with 25 degrees of freedom less than or equal to a is equal to .98, where a equals....
+ans1D <- qt(.98, 25)
+
+#1E: Probability that a is lessthan or equal to z which is less than or equal to 1 is equal to .5, where a is....
+ans1E <- qnorm(pnorm(1) - .5)
+ans1E1 <- pnorm(1) - pnorm(qnorm(pnorm(1) - 0.5))
+
+```
+1A: $P(t_5 \geq -0.5)$ == `r ans1A` = `r ans1A1`
+
+1B: $P(z \leq 2)$ == `r ans1B`
+
+1C: $P(x^2_3 \geq 4)$ == `r ans1C` = `r ans1C1`
+
+1D: $P(t_25 \leq a) = .98$ find $a$ == `r ans1D`
+
+1E: $P(a \leq z \leq 1) = 0.5$ find $a$ == `r ans1E` = `r ans1E1`
+
+
+Question 3: Suppose you flip 100 biased coins, each with a probability of 0.70 of coming up heads.
+```{r lastexam1}
+ans3A <- rbinom(n = 100, size = 100, p = 0.7)
+hist(ans3A)
+
+
+```
+3A: Define the random variable (X) and specify its distribution
+
+>>X is the number of heads from flipping the coin 100 times of a bias coin.
+>> X ~ Bin(n = 100, p = 0.70) == 
+`r ans3A`
+
+3B: Find the E(X) and V(X) exactly, and verify the reasonableness of your answer with a simulation using 10,000 flips.
+```{r 3B}
+# number of coins times the probability of getting heads
+EX <- 100 * 0.7
+# number of coins times the probability of getting heads times 1 minus the probability of getting heads (or the probability of getting tails)
+VX <- 100 * 0.7 * (1-0.7)
+
+#simulation of 10000 flips
+draws <- rbinom(10000, 100, 0.7)
+#approximately 70
+mean(draws)
+#approximately 21
+var(draws)
+```
+E(X) = `r EX`
+V(X) = `r VX`
+
+3C: What is the probability 80 or more of the coins are heads? Provide an exact answer, and use a simulation of 10000 trials to verify the reasonableness of your exact answer.
+```{r}
+#exact answer
+ans3C <- sum(dbinom(80:100, 100, 0.7))
+#OR
+ans3C1 <- 1 - pbinom(80 - 1, 100, .7)
+
+#simulation
+ans3Csim <- mean(rbinom(10000, 100, .7) >= 80)
+```
+exact: `r ans3C` == `r ans3C1`
+
+simulation: `r ans3Csim`
+
+
+3D: Suppose you obeserve 80 heads after flipping the biased coin 100 times. Use the central limit theorem to approximate the $P(X \geq 80)$
+$X \sim N(70, \sqrt{21})$
+```{r}
+ans3D <- pnorm(80, 70, sqrt(21), lower = FALSE)
+#OR
+ans3D1 <- 1 - pnorm(80, 70, sqrt(21))
+```
+`r ans3D` == `r ans3D1`
+
+4: If $X \sim Bin(n = 20, p = 0.5), Y \sim Bin(n = 30, p = 0.2)$ and X and Y are independent, what is the E(4X - 2Y) and V(4X - 2Y)? Provide an exact answer and use simulation with 10,000 trials to verify the reasonableness of your exact answer.
+
+$E(4X - 2Y) = E(4X) - E(2Y) = 4(20* .5) - 2(30 * .2) = 4 * 10 - 2 * 6 = $ 
+
+`r (4*10 - 2*6)`
+
+$V(4X - 2Y) = 16V(X) + 4V(Y) = 16(20 * .5 * (1-.5)) + 4(30 * .2 * (1-.2)) = $ 
+
+`r (16 * (20 * .5 * (1-.5)) + 4 * (30 * .2 * (1-.2)))`
+
+```{r}
+#Question 4
+X <- rbinom(10000, 20, .5)
+Y <- rbinom(10000, 30, .2)
+mean(4*X - 2*Y)
+var(4*X - 2*Y)
+
+```
+
+7: Use the data in Spruce to create a linear model where Di.change is regressed on Ht.change. Store your model in an object named model. Find and interpret the $R^2$ value for the model.  Create and interpret a 90% confidence interval for the mean Di.change for trees with a Ht.change of 40cm.
+```{r question7}
+model <- lm(Spruce$Di.change ~ Spruce$Ht.change)
+summary(model)$r.squared
+#This means the r squared value of the variability in Di.change can be accounted for by changes in Ht.change
+
+CI <- predict(model, newdata = data.frame(Ht.change = 40, interval = "conf", level = 0.9))
+CI
+#We are 90% confident that the mean Di.change for trees with a Ht.change of 40cm falls in the interval above.
+```
+---
+
+```{r}
+
+
+
+## Pre test Code 
+
+#fullterm data is TXBirths where the age is 25-29 gestation is greater than 38 but less or equal to than 42 and no multiples.
+fullterm <- TXBirths2004 %>% 
+  filter(MothersAge == "25-29", Gestation >= 38, 
+         Gestation <= 42, Multiple == "No")
+
+## ------------------------------------------------------------------------
+set.seed(49)
+library(infer)
+#bootstrapping weight 1000 times from full term and calculating the mean.
+bdis <- fullterm %>% 
+specify(response = Weight) %>% 
+generate(reps = 1000, type = "bootstrap") %>% 
+calculate(stat = "mean")
+
+#bdis is the mean of 1000 bootstrap samples created from values in Weight
+# create a 92% cootstrap percentile CI using the values stored in bdis and interpret your confidence interval
+PCI <- bdis %>%
+  summarize(l = quantile(stat, .04), u=quantile(stat, .96))
+PCI
+
+# We are 92% confident that the avg weights for babies carried full term to women 25-29, falls in the above interval.
+## ------------------------------------------------------------------------
+
+set.seed(39)
+#bootstrapping weight vs. smoker 1000 times from full term and calculating diff of the mean for both vars.
+dd <- fullterm %>% 
+  specify(Weight ~ Smoker) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "diff in means", order = c("No", "Yes"))
+#visualize the bootstrapped data
+visualize(dd)
+#Gets the confidence interval with a level of 90% on the bootstrapped data.
+CI <- conf_int(dd, level = 0.90)
+CI
+
+# Bootstrap of the diff in means for Weight vs Smoker
+# The code is generating 1000 bootstrap samples of the weight of children born to smoking mothers and 1000 samples of children born to non smoking mothers. The bootstrap means between those mothers is stored in stat in the dd object.  Conf_int is used to find a 90% confidence interval for this stat in dd we find that the mean birth weight of children to non smoking mothers is between the values above.
+
+## ------------------------------------------------------------------------
+set.seed(19)
+null <- fullterm %>% 
+  specify(Weight ~ Smoker) %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("No", "Yes"))
+pval <- p_value(null, obs_stat = 204, direction = "right")
+pval
+
+
+ftag <- TXBirths2004 %>% 
+  filter(Gestation >= 38, Gestation <= 42, Multiple == "No", 
+         MothersAge != "under 15", MothersAge != "40-44") %>% 
+  droplevels()
+mod.aov <- lm(Weight ~ MothersAge, data = ftag)
+anova(mod.aov)
+
+## ------------------------------------------------------------------------
+set.seed(9)
+pF <- ftag %>% 
+  specify(Weight ~ MothersAge) %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "F")
+pval <- get_pvalue(pF, 6.7592, direction = "right")
+pval
+
+# The code is creating a permmutation distribution for the equality of mean weights for 5 different age groups.  That is, it is testing H_0 : mean(1) = mean(2) = ... mean(5) versus atleast 1 mean(i) not equal to mean(j) for some i not equal to j. based on the pvalue of 0 the evidence suggest that the mean weights are not the same.
+
+## ------------------------------------------------------------------------
+
+# 12: Use the information in ftag to test for an association between Smoker and Gender with the chisq.test() function. State your conclusion after running the test.
+
+T1 <- table(ftag$Smoker, ftag$Gender)
+T11 <- ftag %>%
+  dplyr::select(Smoker, Gender) %>%
+  table()
+T1
+T11
+chisq.test(T1)
+pval <- chisq.test(T1)$p.value
+pval
+
+
+```
+---
+
+
+
+
+
+
+```{r}
+B <- 10^4
+bt <- numeric(B)
+for (i in 1:B) {
+  bss <- sample(fullterm$Weight, size = sum(!is.na(fullterm$Weight)), replace = TRUE)
+  bt[i] <- ((mean(bss)-mean(fullterm$Weight))/(sd(bss)/sqrt(sum(!is.na(fullterm$Weight)))))
+}
+
+Q <- quantile(bt, probs = c(0.05, 0.95))
+Q
+
+BTCI <- c(mean(fullterm$Weight) - Q[2] * sd(fullterm$Weight)/sqrt(length(fullterm$Weight)),mean(fullterm$Weight) - Q[1] * sd(fullterm$Weight)/sqrt(length(fullterm$Weight)))
+
+
+smokers <- fullterm %>%
+  filter(Smoker == "Yes")
+
+nonsmokers <- fullterm %>%
+  filter(Smoker == "No")
+
+
+B <- 10^4
+bt1 <- numeric(B)
+for (i in 1:B) {
+  bss1 <- sample(nonsmokers$Weight, size = sum(!is.na(nonsmokers$Weight)), replace = TRUE)
+  bss2 <- sample(smokers$Weight, size = sum(!is.na(smokers$Weight)), replace = TRUE)
+  bt1[i] <- (((mean(bss1) - mean(bss2))-(mean(smokers$Weight)) - mean(nonsmokers$Weight))/sqrt(((sd(bss1)^2)/length(!is.na(smokers$Weight)))+((sd(bss2)^2)/length(!is.na(nonsmokers$Weight)))))
+}
+
+perc <- .93 #must be between 1 and 0, 1 = 100%, .9 = 90% ...
+l <- (1-(perc))/2
+u <- 1-(1-(perc))/2
+Q <- quantile(bt1, probs = c(l, u))
+Q
+
+t <- qt(u, 22.821)
+t
+
+t.test(Weight~Smoker, data = fullterm, conf = perc)
+
+
+BTCI <- c(mean(fullterm$Weight) - Q[2] * sd(fullterm$Weight)/sqrt(length(fullterm$Weight)),mean(fullterm$Weight) - Q[1] * sd(fullterm$Weight)/sqrt(length(fullterm$Weight)))
+BTCI
+
+
+ft <- fullterm %>%
+  group_by(Smoker) %>%
+  summarise(Mean = mean(Weight), SD = sd(Weight), n = n())
+ft
+
+weightSM <- subset(fullterm, select = Weight, Smoker == "Yes", drop = TRUE)
+weightSM
+
+weightNSM <- fullterm %>%
+  filter(Smoker == "No")
+weightNSM <- weightNSM$Weight
+weightNSM
+
+B1 <- 10^4
+bt2 <- numeric(B1)
+
+for(i in 1:B1) {
+  bss3 <- sample(weightNSM,size = length(weightNSM), replace = TRUE)
+  bss4 <- sample(weightSM,size = length(weightSM), replace = TRUE)
+  bt2[i] <- (((mean(bss3) - mean(bss4))-(mean(weightSM)) - mean(weightNSM))/sqrt(((sd(bss3)^2)/length(!is.na(weightSM)))+((sd(bss4)^2)/length(!is.na(weightNSM)))))
+}
+
+
+wnsm <- fullterm %>%
+  filter(Smoker == "No") %>%
+  dplyr::select(Weight) %>%
+  pull()
+
+
+wsm <- fullterm %>%
+  filter(Smoker == "Yes") %>%
+  dplyr::select(Weight) %>%
+  pull()
+
+xbarwnsm <- mean(wnsm)
+xbarwsm <- mean(wsm)
+theta <- xbarwnsm - xbarwsm
+
+B <- 10^4
+bt3 <- numeric(B)
+for (i in 1:B){
+  bss5 <- sample(wnsm, size = length(wnsm), replace = TRUE)
+  bss6 <- sample(wsm, size = length(wsm), replace = TRUE)
+  bt3[i] <- ((mean(bss5) - mean(bss6)) - theta)/(sqrt(var(bss5)/length(bss5)+var(bss6)/length(bss6)))
+}
+
+Q <- quantile(bt3, probs = c(0.025, .975))
+
+CI <- c(theta - Q[2]*(sqrt(var(wnsm)/length(wnsm)+var(wsm)/length(wsm))),theta - Q[1]*(sqrt(var(wnsm)/length(wnsm)+var(wsm)/length(wsm))))
+CI
+
+CI <- theta - Q[2:1]*(sqrt(var(wnsm)/length(wnsm)+var(wsm)/length(wsm)))
+CI
+
+#permutation test and pvalue with for loop = test hypothesis that mean weight for non smokers - mean weight for smokers = 0 vs alt that they are not equal to 0
+
+xbarwnsm <- mean(wnsm)
+xbarwsm <- mean(wsm)
+obs_stat <- xbarwnsm - xbarwsm
+
+pt <- numeric(B)
+
+for(i in 1:B) {
+  obs <- tapply(fullterm$Weight, sample(fullterm$Smoker), mean)
+  pt[i] <- obs[1] - obs[2]
+}
+
+pvalue <- (sum(pt >= obs_stat)*2 + 1)/(B+1)
+pvalue
+
+#prob that (1 <= chisq(15) <= 10)
+pchisq(10, 15) - pchisq(1, 15)
+
+#prob that (-2 <= tdist(5) <= a) = 0.7 a = ___
+(qt(pt(-2, 5)+.7, 5))
+
+#prob that (-a <= Z <= a) = 0.95 => a = ____
+res <- .95
+val <- (1+res)/2
+qnorm(val)
+
+
+#################################################################
+
+B <- 10^4
+bt4 <- numeric(B)
+for (i in 1:B){
+  bss5 <- sample(wnsm, size = length(wnsm), replace = TRUE)
+  bss6 <- sample(wsm, size = length(wsm), replace = TRUE)
+  bt4[i] <- ((mean(bss5) / mean(bss6)))
+}
+
+
+perc <- .92 #must be between 1 and 0, 1 = 100%, .9 = 90% ...
+l <- (1-(perc))/2
+u <- 1-(1-(perc))/2
+Q <- quantile(bt4, probs = c(l, u))
+Q
+
+t.test(Weight~Smoker, data = fullterm, conf = perc)
+
+
+BTCI <- c(mean(fullterm$Weight) - Q[2] * sd(fullterm$Weight)/sqrt(length(fullterm$Weight)),mean(fullterm$Weight) - Q[1] * sd(fullterm$Weight)/sqrt(length(fullterm$Weight)))
+BTCI
+
+```
+---
+
+#Basics
+  
+##Fundamental Question of Inference
+>How does what we actually observe compare to the null hypothesis if we repeat the process many times?
+  
+##What is a p-value
+>The probability that what we observe is greater than or equal to the observation we made if we assume the null hypothesis is true.
+  
+>>A small p-value (typically ≤ 0.05) indicates strong evidence against the null hypothesis, so you reject the null hypothesis.
+  
+>>A large p-value (> 0.05) indicates weak evidence against the null hypothesis, so you fail to reject the null hypothesis.
+  
+>>>If you reject the null hypothesis then you can only have a type I error.
+  
+>>>If you fail to reject the null hypothesis then you can only have a Type II error.
+  
+>>>>If they reject or fail or reject and their hypothesis is incorrect they have made an error.
+  
+  
+#Bootstrapping
+  
+##CLT (Central Limit Theorm)
+
+$x, x_1, x_2, x_3, ... x_n \sim (\mu, \theta)$
+    
+#Bootstrapping
+>The bootstrap is a procedure that uses the given sample to create a new distribution, called the bootstrap distribution, that approximates the sampling distribution for the sample mean (or for other statistics).
+
+---

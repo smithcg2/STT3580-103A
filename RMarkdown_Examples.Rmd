@@ -1,0 +1,41 @@
+---
+title: "RMarkdown Examples"
+author: "Cameron Smith"
+date: "11/13/2018"
+output: bookdown::html_document2
+---
+
+```{r setup, include=FALSE, echo = TRUE, fig.align='center', warning=FALSE, message=FALSE, comment= NA}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# R Markdown
+
+When you click the **Knit** button a dosument will be generated that includes both content as well as the output of any embedded R code chunks within the document.  Consider Table \@ref(tab:cars).
+
+```{r cars, echo=FALSE, fig.cap="First 6 rows of mtcars"}
+knitr::kable(head(mtcars), booktabs = TRUE, caption = "First 6 rows of `mtcars`")
+```
+
+# Including Plots
+You can also embed plots such as Figure \@ref(fig:pressure)
+
+```{r pressure, echo = FALSE, fig.cap="Scatterplot of `pressure` versus `temperature`"}
+plot(pressure)
+```
+
+#3
+
+# Chi-Square Test?
+
+Two different professors teach and introductory statistics course. Table \@ref(tab:TP) shows the distribution of final grades they reported.  We wonder whether one of these professors is an "easier" grader.
+
+
+```{r TP, echo = FALSE}
+mat <- matrix(c(3, 10, 11, 11, 14, 8, 10, 1, 4, 0), nrow = 5, byrow=TRUE)
+dimnames(mat) <- list(Grade = c(LETTERS[1:4], LETTERS[6]), Professor = c("Alpha", "Beta"))
+tt <- as.table(mat)
+knitr::kable(tt, caption = "Grades for Alpha and Beta")
+```
+
+If you reject the null hypothesis, the only error you can make is a Type I error.
+If you fail to reject the null hypothesis you can only make a Type II error.

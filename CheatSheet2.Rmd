@@ -1,0 +1,298 @@
+---
+title: "Cheat Sheet 2"
+author: "Cameron Smith"
+date: "11/14/2018"
+output: bookdown::html_document2
+#email to:arnholtat@appstate.edu
+#subject: STT 3850 - 103
+#name file: Smith_Cameron_IS2.Rmd
+---
+
+```{r setup, include=FALSE, echo = FALSE, results = 'hide', message = FALSE, warning = FALSE, fig.align='center'}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(infer)
+library(openintro)
+library(ggplot2)
+library(resampledata)
+library(xtable)
+```
+
+<center><h1>Exam 2 Toolbox</h1></center>
+
+#Basics
+
+##Fundamental Question of Inference
+>How does what we actually observe compare to the null hypothesis if we repeat the process many times?
+
+##What is a p-value
+>The probability that what we observe is greater than or equal to the observation we made if we assume the null hypothesis is true.
+
+>>A small p-value (typically ≤ 0.05) indicates strong evidence against the null hypothesis, so you reject the null hypothesis.
+
+>>A large p-value (> 0.05) indicates weak evidence against the null hypothesis, so you fail to reject the null hypothesis.
+
+
+#Bootstrapping
+
+##CLT (Central Limit Theorm)
+  $x, x_1, x_2, x_3, ... x_n \sim (\mu, \theta)$
+  
+##Bootstrapping
+>The bootstrap is a procedure that uses the given sample to create a new distribution, called the bootstrap distribution, that approximates the sampling distribution for the sample mean (or for other statistics).
+
+Consider the bootstrapped data in \@ref(fig:rent_plot)
+
+```{r}
+reps <-150
+manhattan <- read.csv("https://assets.datacamp.com/production/course_5103/datasets/manhattan.csv")
+# Generate bootstrap distribution of medians
+rent_ci_med <- manhattan %>%
+  # Specify the variable of interest
+  specify(response = rent) %>%  
+  # Generate 15000 bootstrap samples
+  generate(reps = reps, type = "bootstrap") %>% 
+  # Calculate the median of each bootstrap sample
+  calculate(stat = "median")
+```
+
+```{r rent_plot, fig.cap="histogram of rent_ci_med"}
+# Plot a histogram of rent_ci_med
+#{ggplot(rent_ci_med, aes(stat)) +
+  #geom_histogram(binwidth = 50)}
+hist(rent_ci_med$stat, col="darkgrey") +
+  theme_bw()
+```
+
+```{r}
+# Percentile method
+rent_ci_med %>%
+  summarize(l = quantile(stat, 0.025),
+            u = quantile(stat, 0.975))
+# Standard error method
+# Calculate observed median
+rent_med_obs <- manhattan %>%
+  # Calculate observed median rent
+  summarize(median(rent)) %>%
+  # Extract numerical value
+  pull()                      
+# Determine critical value
+t_star <- qt(0.975, df = nrow(manhattan) - 1)
+# Construct interval
+rent_ci_med %>%
+  summarize(boot_se = sd(stat)) %>%
+  summarize(l = rent_med_obs - t_star * boot_se,
+            u = rent_med_obs + t_star * boot_se)
+sims <- reps
+MED <- numeric(sims)
+for(i in 1:sims) {
+  bss <- sample(manhattan$rent, 20, replace = TRUE)
+  MED[i] <- median(bss)
+}
+CI_perc <- quantile(MED, probs = c(.025, .975))
+CI_perc
+# Remove NA visits
+ncbirths_complete_visits <- ncbirths %>%
+  filter(!is.na(visits))
+# Generate #reps bootstrap means
+visit_ci_mean <- ncbirths_complete_visits %>%
+  specify(response = visits) %>%
+  generate(reps = reps, type = "bootstrap") %>%
+  calculate(stat = "mean")
+# Calculate the 90% CI via percentile method
+visit_ci_mean %>%
+  summarize(l = quantile(stat, 0.05),
+            u = quantile(stat, 0.95))
+# Calculate #reps bootstrap SDs
+visit_ci_sd <- ncbirths_complete_visits %>%
+  specify(response = visits) %>%
+  generate(reps = reps, type = "bootstrap") %>%
+  calculate(stat = "sd")
+  
+# Calculate the 90% CI via percentile method
+visit_ci_sd %>%
+  summarize(l = quantile(stat, 0.05),
+            u = quantile(stat, 0.95))
+# Generate `reps` bootstrap samples centered at null
+rent_med_ht <- manhattan %>%
+  specify(response = rent) %>%
+  hypothesize(null = "point", med = 2500) %>% 
+  generate(reps = reps, type = "bootstrap") %>% 
+  calculate(stat = "median")
+# Calculate observed median
+rent_med_obs <- manhattan %>%
+  summarize(median(rent)) %>%
+  pull()
+# Calculate p-value
+rent_ht_pval <- rent_med_ht %>%
+  filter(stat > rent_med_obs) %>%
+  summarize(n() / reps)
+```
+The p-value for rent_med_ht is: `r rent_ht_pval`
+
+```{r}
+
+qnorm(c(.1, .25, .75, .9), 90, 5)
+
+```
+
+---
+View the null distrubution of a bootstrapping of weight vs smokers in \@ref(fig:weightvssmoke)
+```{r}
+## Pre test Code 
+
+library(infer)
+library(resampledata)
+library(tidyverse)
+#fullterm data is TXBirths where the age is 25-29 gestation is greater than 38 but less or equal to than 42 and no multiples.
+fullterm <- TXBirths2004 %>% 
+  filter(MothersAge == "25-29", Gestation >= 38, 
+         Gestation <= 42, Multiple == "No")
+
+## ------------------------------------------------------------------------
+set.seed(49)
+library(infer)
+#bootstrapping weight 1000 times from full term and calculating the mean.
+bdis <- fullterm %>% 
+specify(response = Weight) %>% 
+generate(reps = 1000, type = "bootstrap") %>% 
+calculate(stat = "mean")
+
+```
+
+```{r weightvssmoke}
+set.seed(39)
+#bootstrapping weight vs. smoker 1000 times from full term and calculating diff of the mean for both vars.
+dd <- fullterm %>% 
+  specify(Weight ~ Smoker) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "diff in means", order = c("No", "Yes"))
+#visualize the bootstrapped data
+visualize(dd)
+#Gets the confidence interval with a level of 90% on the bootstrapped data.
+CI <- conf_int(dd, level = 0.90)
+CI
+```
+
+```{r}
+set.seed(19)
+null <- fullterm %>% 
+  specify(Weight ~ Smoker) %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("No", "Yes"))
+pval <- p_value(null, obs_stat = 196.924, direction = "right")
+pval
+
+
+ftag <- TXBirths2004 %>% 
+  filter(Gestation >= 38, Gestation <= 42, Multiple == "No", 
+         MothersAge != "under 15", MothersAge != "40-44") %>% 
+  droplevels()
+
+#Fitting Linear Models
+#Description
+#lm is used to fit linear models. It can be used to carry out regression, single stratum analysis of variance and analysis of covariance (although aov may provide a more convenient interface for these).
+#Usage
+#lm(formula, data, subset, weights, na.action,
+#   method = "qr", model = TRUE, x = FALSE, y = FALSE, qr = TRUE,
+#   singular.ok = TRUE, contrasts = NULL, offset, ...)
+#Arguments
+#formula	
+#an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted. The details of model specification are given under ‘Details’.
+#data	
+#an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which lm is called.
+#subset	
+#an optional vector specifying a subset of observations to be used in the fitting process.
+#weights	
+#an optional vector of weights to be used in the fitting process. Should be NULL or a numeric vector. If non-NULL, weighted least squares is used with weights weights (that is, minimizing sum(w*e^2)); otherwise ordinary least squares is used. See also ‘Details’,
+#na.action	
+#a function which indicates what should happen when the data contain NAs. The default is set by the na.action setting of options, and is na.fail if that is unset. The ‘factory-fresh’ default is na.omit. Another possible value is NULL, no action. Value na.exclude can be useful.
+#method	
+#the method to be used; for fitting, currently only method = "qr" is supported; method = "model.frame" returns the model frame (the same as with model = TRUE, see below).
+#model, x, y, qr	
+#logicals. If TRUE the corresponding components of the fit (the model frame, the model matrix, the response, the QR decomposition) are returned.
+#singular.ok	
+#logical. If FALSE (the default in S but not in R) a singular fit is an error.
+#contrasts	
+#an optional list. See the contrasts.arg of model.matrix.default.
+#offset	
+#this can be used to specify an a priori known component to be included in the linear predictor during fitting. This should be NULL or a numeric vector of length equal to the number of cases. One or more offset terms can be included in the formula instead or as well, and if more than one are specified their sum is used. See model.offset.
+#...	
+#additional arguments to be passed to the low level regression fitting functions (see below).
+#Details
+#Models for lm are specified symbolically. A typical model has the form response ~ terms where response is the (numeric) response vector and terms is a series of terms which specifies a linear predictor for response. A terms specification of the form first + second indicates all the terms in first together with all the terms in second with duplicates removed. A specification of the form first:second indicates the set of terms obtained by taking the interactions of all terms in first with all terms in second. The specification first*second indicates the cross of first and second. This is the same as first + second + first:second.
+#If the formula includes an offset, this is evaluated and subtracted from the response.
+#If response is a matrix a linear model is fitted separately by least-squares to each column of the matrix.
+#See model.matrix for some further details. The terms in the formula will be re-ordered so that main effects come first, followed by the interactions, all second-order, all third-order and so on: to avoid this pass a terms object as the formula (see aov and demo(glm.vr) for an example).
+#A formula has an implied intercept term. To remove this use either y ~ x - 1 or y ~ 0 + x. See formula for more details of allowed formulae.
+#Non-NULL weights can be used to indicate that different observations have different variances (with the values in weights being inversely proportional to the variances); or equivalently, when the elements of weights are positive integers w_i, that each response y_i is the mean of w_i unit-weight observations (including the case that there are w_i observations equal to y_i and the data have been summarized). However, in the latter case, notice that within-group variation is not used. Therefore, the sigma estimate and residual degrees of freedom may be suboptimal; in the case of replication weights, even wrong. Hence, standard errors and analysis of variance tables should be treated with care.
+#lm calls the lower level functions lm.fit, etc, see below, for the actual numerical computations. For programming only, you may consider doing likewise.
+#All of weights, subset and offset are evaluated in the same way as variables in formula, that is first in data and then in the environment of formula.
+#Value
+#lm returns an object of class "lm" or for multiple responses of class c("mlm", "lm").
+#The functions summary and anova are used to obtain and print a summary and analysis of variance table of the results. The generic accessor functions coefficients, effects, fitted.values and residuals extract various useful features of the value returned by lm.
+#An object of class "lm" is a list containing at least the following components:
+#coefficients	
+#a named vector of coefficients
+#residuals	
+#the residuals, that is response minus fitted values.
+#fitted.values	
+#the fitted mean values.
+#rank	
+#the numeric rank of the fitted linear model.
+#weights	
+#(only for weighted fits) the specified weights.
+#df.residual	
+#the residual degrees of freedom.
+#call	
+#the matched call.
+#terms	
+#the terms object used.
+#contrasts	
+#(only where relevant) the contrasts used.
+#xlevels	
+#(only where relevant) a record of the levels of the factors used in fitting.
+#offset	
+#the offset used (missing if none were used).
+#y	
+#if requested, the response used.
+#x	
+#if requested, the model matrix used.
+#model	
+#if requested (the default), the model frame used.
+#na.action	
+#(where relevant) information returned by model.frame on the special handling of NAs.
+#In addition, non-null fits will have components assign, effects and (unless not requested) qr relating to the linear fit, for use by extractor functions such as summary and effects.
+
+mod.aov <- lm(Weight ~ MothersAge, data = ftag)
+#Anova Tables
+#Description
+#Compute analysis of variance (or deviance) tables for one or more fitted model objects.
+#Usage
+#anova(object, ...)
+#Arguments
+#object	
+#an object containing the results returned by a model fitting function (e.g., lm or glm).
+#...	
+#additional objects of the same type.
+#Value
+#This (generic) function returns an object of class anova. These objects represent analysis-of-variance and analysis-of-deviance tables. When given a single argument it produces a table which tests whether the model terms are significant.
+#When given a sequence of objects, anova tests the models against one another in the order specified.
+#The print method for anova objects prints tables in a ‘pretty’ form.
+#Warning
+#The comparison between two or more models will only be valid if they are fitted to the same dataset. This may be a problem if there are missing values and R's default of na.action = na.omit is used.
+anova(mod.aov)
+
+set.seed(9)
+pF <- ftag %>% 
+  specify(Weight ~ MothersAge) %>% 
+  hypothesize(null = "independence") %>% 
+  generate(reps = 1000, type = "permute") %>% 
+  calculate(stat = "F")
+#F Distribution
+#If V 1 and V 2 are two independent random variables having the Chi-Squared distribution with m1 and m2 degrees of freedom respectively, then the following quantity follows an F distribution with m1 numerator degrees of freedom and m2 denominator degrees of freedom, i.e., (m1,m2) degrees of freedom.
+pval <- get_pvalue(pF, 6.7592, direction = "right")
+pval
+```

@@ -45,7 +45,7 @@ Credit %>%
 
 
 
-mod2 <- lm(Balance ~ Age + Income + Rating + Limit, Credit)
+mod2 <- lm(Balance ~ Age + Income + Rating + Student + Rating + ID, Credit)
 mod2
 summary(mod2)
 
